@@ -50,4 +50,5 @@ If you enjoy these modules, please consider supporting the author with a donatio
 
 This plugin is licensed under the [GPL-3.0-or-later](LICENSE.md).
 
+## Screenshot
 ![description](modules.png)
