@@ -7,7 +7,7 @@ Requires VCV Rack v2.4.0 or later.
 ## Modules
 
 ### Clockode
-A 16-step **clock source with shiftable step timing**. It generates its own clock (adjustable Tempo, with CV control) or can be driven by an external clock, and outputs a trigger for each of the 16 steps. Step count is also CV-controllable.
+A 16-step **clock source with shiftable step timing**. It generates its own clock (adjustable Tempo) or can be driven by an external clock, and outputs a trigger for each of the 16 steps. Step count is also CV-controllable.
 
 ### Gatto
 A 16-step **gate sequencer** with variable step length. Each step has a trimmer to set its gate duration (0–100%), so you can go from tight ticks to overlapping legato gates. Gate output drives envelopes, or anything else that reacts to gates.

@@ -8,8 +8,6 @@ struct Clockode : Module {
 		TRIG_PARAM,
 		ENUMS(CV_PARAMS, 16),
 		ENUMS(GATE_PARAMS, 16),
-		TEMPO_CV_PARAM,
-		STEPS_CV_PARAM,
 		CLOCK_PARAM,
 		NUM_PARAMS
 	};
@@ -58,14 +56,10 @@ struct Clockode : Module {
 
 		configParam(TEMPO_PARAM, -2.f, 4.f, 1.f, "Tempo", " bpm", 2.f, 60.f);
 		getParamQuantity(TEMPO_PARAM)->randomizeEnabled = false;
-		configParam(TEMPO_CV_PARAM, 0.f, 1.f, 1.f, "Tempo CV", "%", 0, 100);
-		getParamQuantity(TEMPO_CV_PARAM)->randomizeEnabled = false;
 		configButton(CLOCK_PARAM, "Clock");
 		configButton(RUN_PARAM, "Run");
 		configParam(TRIG_PARAM, 1.f, 16.f, 16.f, "Steps");
 		getParamQuantity(TRIG_PARAM)->randomizeEnabled = false;
-		configParam(STEPS_CV_PARAM, 0.f, 1.f, 1.f, "Steps CV", "%", 0, 100);
-		getParamQuantity(STEPS_CV_PARAM)->randomizeEnabled = false;
 		paramQuantities[TRIG_PARAM]->snapEnabled = true;
 		
 		for (int i = 0; i < 16; i++) {
@@ -149,7 +143,7 @@ struct Clockode : Module {
 		bool runGate = runPulse.process(args.sampleTime);
 
 		// Get number of steps
-		float steps = params[TRIG_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage() * params[STEPS_CV_PARAM].getValue();
+		float steps = params[TRIG_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage();
 		int numSteps = (int) clamp(std::round(steps), 1.f, 16.f);
 
 		// Clock
@@ -191,7 +185,7 @@ struct Clockode : Module {
 			}
 			else {
 				// Internal clock
-				float clockPitch = params[TEMPO_PARAM].getValue() + inputs[TEMPO_INPUT].getVoltage() * params[TEMPO_CV_PARAM].getValue();
+				float clockPitch = params[TEMPO_PARAM].getValue() + inputs[TEMPO_INPUT].getVoltage();
 				float clockFreq = dsp::exp2_taylor5(clockPitch);
 				period = 1.f / clockFreq;
 				phase += clockFreq * args.sampleTime;
@@ -340,8 +334,6 @@ struct ClockodeWidget : ModuleWidget {
 
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.0, 15 + 0 * 8)), module, Clockode::TEMPO_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.0, 15 + 1 * 8)), module, Clockode::TRIG_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.0, 15 + 2 * 8)), module, Clockode::TEMPO_CV_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(5.0, 15 + 3 * 8)), module, Clockode::STEPS_CV_PARAM));
 		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(5.0, 15 + 4 * 8)), module, Clockode::CLOCK_PARAM, Clockode::CLOCK_LIGHT));
 		addParam(createLightParamCentered<VCVLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(5.0, 15 + 5 * 8)), module, Clockode::RUN_PARAM, Clockode::RUN_LIGHT));
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 6 * 8)), module, Clockode::TEMPO_INPUT));
