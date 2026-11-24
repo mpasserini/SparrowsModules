@@ -271,6 +271,8 @@ struct Clockode : Module {
 
 		// running
 		json_object_set_new(rootJ, "running", json_boolean(running));
+		json_object_set_new(rootJ, "index", json_integer(index));
+		json_object_set_new(rootJ, "phase", json_real(phase));
 
 		// gates
 		json_t* gatesJ = json_array();
@@ -290,6 +292,20 @@ struct Clockode : Module {
 		json_t* runningJ = json_object_get(rootJ, "running");
 		if (runningJ)
 			running = json_is_true(runningJ);
+
+		json_t* indexJ = json_object_get(rootJ, "index");
+		if (indexJ) {
+			json_int_t savedIndex = json_integer_value(indexJ);
+			if (savedIndex >= 0 && savedIndex < 16)
+				index = (int) savedIndex;
+		}
+
+		json_t* phaseJ = json_object_get(rootJ, "phase");
+		if (phaseJ && json_is_number(phaseJ)) {
+			double savedPhase = json_number_value(phaseJ);
+			if (savedPhase >= 0.0 && savedPhase < 1.0)
+				phase = (float) savedPhase;
+		}
 
 		// gates
 		json_t* gatesJ = json_object_get(rootJ, "gates");

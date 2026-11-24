@@ -21,6 +21,7 @@ struct Civciv : Module {
 	};
 	enum OutputIds { 
 		CV_OUTPUT,
+		EOC_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -40,6 +41,7 @@ struct Civciv : Module {
 	dsp::SchmittTrigger resetTrigger;
 
 	dsp::PulseGenerator clockPulse;
+	dsp::PulseGenerator eocPulse;
 
 	int index = 0;
 	bool slides[16] = {};
@@ -73,6 +75,7 @@ struct Civciv : Module {
 
 		
 		configOutput(CV_OUTPUT, "CV");
+		configOutput(EOC_OUTPUT, "End of cycle");
 
 	}
 
@@ -141,8 +144,10 @@ struct Civciv : Module {
 			haveClock = true;
 			if (!reset) {
 				index++;
-				if (index >= numSteps)
+				if (index >= numSteps) {
 					index = 0;
+					eocPulse.trigger(1e-3f);
+				}
 			}
 			clockPulse.trigger(1e-3f);
 		}
@@ -188,6 +193,7 @@ struct Civciv : Module {
 			cv += (nextCv - cv) * progress;
 		}
 		outputs[CV_OUTPUT].setVoltage(cv);
+		outputs[EOC_OUTPUT].setVoltage(eocPulse.process(args.sampleTime) ? 10.f : 0.f);
 		if (running && haveClock)
 			clockElapsed += args.sampleTime;
 
@@ -253,6 +259,7 @@ struct CivcivWidget : ModuleWidget {
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 9 * 8)), module, Civciv::RUN_INPUT));
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 6 * 8)), module, Civciv::RESET_INPUT));
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 10 * 8)), module, Civciv::CV_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 11 * 8)), module, Civciv::EOC_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {

@@ -17,6 +17,7 @@ struct Gatto : Module {
 	};
 	enum OutputIds {
 		GATE_OUTPUT,
+		EOC_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -34,6 +35,7 @@ struct Gatto : Module {
 	dsp::SchmittTrigger resetTrigger;
 
 	dsp::PulseGenerator clockPulse;
+	dsp::PulseGenerator eocPulse;
 
 	int index = -1;
 	float clockElapsed = 0.f;
@@ -61,6 +63,7 @@ struct Gatto : Module {
 
 		
 		configOutput(GATE_OUTPUT, "Gate");
+		configOutput(EOC_OUTPUT, "End of cycle");
 
 	}
 
@@ -128,8 +131,11 @@ struct Gatto : Module {
 		if (clock) {
 			if (!reset) {
 				index++;
-				if (index >= numSteps)
+				if (index >= numSteps) {
 					index = 0;
+					// The sequence has wrapped: pulse EOC as the first step begins.
+					eocPulse.trigger(1e-3f);
+				}
 			}
 			// Gate length is a percentage of the previous clock interval.
 			float len = params[GATE_PARAMS + index].getValue() / 100.f;
@@ -153,6 +159,7 @@ struct Gatto : Module {
 
 		// Outputs
 		outputs[GATE_OUTPUT].setVoltage(clockGate ? 10.f : 0.f);
+		outputs[EOC_OUTPUT].setVoltage(eocPulse.process(args.sampleTime) ? 10.f : 0.f);
 
 		lights[CLOCK_LIGHT].setSmoothBrightness(clockGate, args.sampleTime);
 	}
@@ -195,6 +202,7 @@ struct GattoWidget : ModuleWidget {
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 9 * 8)), module, Gatto::RUN_INPUT));
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 6 * 8)), module, Gatto::RESET_INPUT));
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 10 * 8)), module, Gatto::GATE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 11 * 8)), module, Gatto::EOC_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {

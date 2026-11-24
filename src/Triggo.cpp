@@ -18,6 +18,7 @@ struct Triggo : Module {
 	};
 	enum OutputIds {
 		TRIG_OUTPUT,
+		EOC_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -39,6 +40,7 @@ struct Triggo : Module {
 	dsp::SchmittTrigger resetTrigger;
 
 	dsp::PulseGenerator clockPulse;
+	dsp::PulseGenerator eocPulse;
 
 	int index = 0;
 	bool gates[16] = {};
@@ -66,6 +68,7 @@ struct Triggo : Module {
 		configInput(RESET_INPUT, "Reset");
 
 		configOutput(TRIG_OUTPUT, "Accent trigger");
+		configOutput(EOC_OUTPUT, "End of cycle");
 
 	}
 
@@ -109,8 +112,10 @@ struct Triggo : Module {
 		if (clock) {
 			if (!reset) {
 				index++;
-				if (index >= numSteps)
+				if (index >= numSteps) {
 					index = 0;
+					eocPulse.trigger(1e-3f);
+				}
 			}
 			clockPulse.trigger(1e-3f);
 		}
@@ -136,6 +141,7 @@ struct Triggo : Module {
 
 		// Outputs
 		outputs[TRIG_OUTPUT].setVoltage((clockGate && gates[index]) ? 10.f : 0.f);
+		outputs[EOC_OUTPUT].setVoltage(eocPulse.process(args.sampleTime) ? 10.f : 0.f);
 
 		lights[CLOCK_LIGHT].setSmoothBrightness(clockGate, args.sampleTime);
 	}
@@ -208,6 +214,7 @@ struct TriggoWidget : ModuleWidget {
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 8 * 8)), module, Triggo::CLOCK_INPUT));
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 9 * 8)), module, Triggo::RUN_INPUT));
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 10 * 8)), module, Triggo::TRIG_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(5.0, 15 + 11 * 8)), module, Triggo::EOC_OUTPUT));
 		
 
 	}
